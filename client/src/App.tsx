@@ -36,7 +36,7 @@ function App() {
   const cardValues = [1, 2, 3, 5, 10];
 
   useEffect(() => {
-    const newSocket = io('http://localhost:3001');
+    const newSocket = io('http://localhost:3000');
     setSocket(newSocket);
 
     newSocket.on('game-state-update', (state: GameState) => {
