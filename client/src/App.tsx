@@ -32,8 +32,10 @@ function App() {
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
   const [voteCount, setVoteCount] = useState({ votedCount: 0, totalPlayers: 0 });
   const [results, setResults] = useState<{ votes: Vote[]; average: number } | null>(null);
+  const [isCountingDown, setIsCountingDown] = useState(false);
+  const [countdown, setCountdown] = useState(0);
 
-  const cardValues = [1, 2, 3, 5, 10];
+  const cardValues = [1, 2, 3, 5, 8, 13, 21, 34, 55, 89];
 
   useEffect(() => {
     const socketUrl = process.env.NODE_ENV === 'production' 
@@ -50,10 +52,29 @@ function App() {
     newSocket.on('voting-started', () => {
       setSelectedCard(null);
       setResults(null);
+      setIsCountingDown(false);
+      setCountdown(0);
     });
 
     newSocket.on('vote-count-update', (count: { votedCount: number; totalPlayers: number }) => {
       setVoteCount(count);
+    });
+
+    newSocket.on('start-countdown', () => {
+      setIsCountingDown(true);
+      setCountdown(3);
+      
+      // カウントダウンタイマー
+      let count = 3;
+      const timer = setInterval(() => {
+        count--;
+        setCountdown(count);
+        
+        if (count <= 0) {
+          clearInterval(timer);
+          setIsCountingDown(false);
+        }
+      }, 1000);
     });
 
     newSocket.on('voting-complete', (result: { votes: Vote[]; average: number }) => {
@@ -94,6 +115,8 @@ function App() {
       socket.emit('next-round');
       setResults(null);
       setSelectedCard(null);
+      setIsCountingDown(false);
+      setCountdown(0);
     }
   };
 
@@ -180,6 +203,17 @@ function App() {
             {selectedCard !== null && (
               <div className="selected-info">
                 選択したカード: {selectedCard}
+              </div>
+            )}
+            
+            {/* カウントダウンオーバーレイ */}
+            {isCountingDown && (
+              <div className="countdown-overlay">
+                <div className="countdown-content">
+                  <h2>投票完了！</h2>
+                  <div className="countdown-number">{countdown}</div>
+                  <p>結果発表まで...</p>
+                </div>
               </div>
             )}
           </div>

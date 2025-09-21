@@ -125,7 +125,7 @@ io.on('connection', (socket) => {
 
   // 投票処理
   socket.on('submit-vote', (vote: number) => {
-    if (typeof vote !== 'number' || ![1, 2, 3, 5, 10].includes(vote)) {
+    if (typeof vote !== 'number' || ![1, 2, 3, 5, 8, 13, 21, 34, 55, 89].includes(vote)) {
       console.error('無効な投票値:', vote);
       return;
     }
@@ -155,20 +155,27 @@ io.on('connection', (socket) => {
 
       // 全員の投票が完了したかチェック
       if (gameState.votes.size === gameState.players.size) {
-        gameState.gamePhase = 'results';
+        // カウントダウン開始を通知
+        io.to(gameState.roomId).emit('start-countdown');
+        console.log('全員の投票が完了。カウントダウンを開始します');
         
-        // 結果計算
-        const votes = Array.from(gameState.votes.values());
-        const sum = votes.reduce((acc, v) => acc + v.vote, 0);
-        const average = Math.round((sum / votes.length) * 10) / 10;
-        
-        const votingResult: VotingResult = {
-          votes: votes,
-          average: average
-        };
+        // 3秒後に結果を表示
+        setTimeout(() => {
+          gameState.gamePhase = 'results';
+          
+          // 結果計算
+          const votes = Array.from(gameState.votes.values());
+          const sum = votes.reduce((acc, v) => acc + v.vote, 0);
+          const average = Math.round((sum / votes.length) * 10) / 10;
+          
+          const votingResult: VotingResult = {
+            votes: votes,
+            average: average
+          };
 
-        io.to(gameState.roomId).emit('voting-complete', votingResult);
-        console.log(`投票完了。平均値: ${average}`);
+          io.to(gameState.roomId).emit('voting-complete', votingResult);
+          console.log(`投票完了。平均値: ${average}`);
+        }, 3000);
       }
     }
   });
