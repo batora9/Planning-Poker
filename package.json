@@ -12,5 +12,8 @@
     "install:all": "npm install && cd server && npm install && cd ../client && npm install",
     "start:server": "cd server && npm start",
     "start:client": "cd client && npm run preview"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2"
   }
 }
