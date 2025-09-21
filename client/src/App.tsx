@@ -36,7 +36,12 @@ function App() {
   const cardValues = [1, 2, 3, 5, 10];
 
   useEffect(() => {
-    const newSocket = io('http://localhost:3000');
+    // 本番環境では現在のホストを使用、開発環境ではlocalhostを使用
+    const socketUrl = process.env.NODE_ENV === 'production' 
+      ? window.location.origin 
+      : 'http://localhost:3000';
+    
+    const newSocket = io(socketUrl);
     setSocket(newSocket);
 
     newSocket.on('game-state-update', (state: GameState) => {

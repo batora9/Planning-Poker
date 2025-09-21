@@ -42,15 +42,26 @@ interface VoteCountUpdate {
 // Express アプリケーションの設定
 const app = express();
 const server = http.createServer(app);
+
+// CORS設定 - 本番環境とローカル開発の両方をサポート
+const allowedOrigins = process.env.NODE_ENV === 'production' 
+  ? process.env.CLIENT_URL ? [process.env.CLIENT_URL] : []
+  : ["http://localhost:5173"];
+
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: allowedOrigins.length > 0 ? allowedOrigins : true,
     methods: ["GET", "POST"]
   }
 });
 
-// 静的ファイルの配信
+// 静的ファイルの配信 - 本番環境ではビルドされたクライアントファイルを配信
 app.use(express.static(path.join(__dirname, '../../client/dist')));
+
+// すべてのルートでindex.htmlを返す（React Routerのため）
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
+});
 
 // ゲーム状態管理
 const gameState: GameState = {
@@ -205,6 +216,9 @@ const PORT = process.env.PORT || 3000;
 
 server.listen(PORT, () => {
   console.log(`サーバーがポート ${PORT} で起動しました`);
-  console.log(`WebSocket サーバー: ws://localhost:${PORT}`);
-  console.log(`クライアント URL: http://localhost:5173`);
+  console.log(`環境: ${process.env.NODE_ENV || 'development'}`);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`WebSocket サーバー: ws://localhost:${PORT}`);
+    console.log(`クライアント URL: http://localhost:5173`);
+  }
 });
