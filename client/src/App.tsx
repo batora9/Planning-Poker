@@ -127,18 +127,18 @@ function App() {
           <h1>Planning Poker</h1>
           <form onSubmit={handleJoinGame}>
             <div className="input-group">
-              <label htmlFor="playerName">お名前を入力してください</label>
+              <label htmlFor="playerName">名前を入力してください</label>
               <input
                 id="playerName"
                 type="text"
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
-                placeholder="お名前"
+                placeholder="名前"
                 required
               />
             </div>
             <button type="submit" className="join-button">
-              ゲームに参加
+              参加
             </button>
           </form>
         </div>
