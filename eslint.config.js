@@ -12,22 +12,22 @@ export default [
         ecmaVersion: 2024,
         sourceType: 'module',
         ecmaFeatures: {
-          jsx: true
-        }
-      }
+          jsx: true,
+        },
+      },
     },
     plugins: {
-      '@typescript-eslint': typescript
+      '@typescript-eslint': typescript,
     },
     rules: {
       ...typescript.configs.recommended.rules,
-      'indent': ['error', 2],
-      'quotes': ['error', 'single'],
-      'semi': ['error', 'always'],
+      indent: ['error', 2],
+      quotes: ['error', 'single'],
+      semi: ['error', 'always'],
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': 'warn',
-      'no-console': 'off'
-    }
+      'no-console': 'off',
+    },
   },
   // クライアント側（ブラウザ環境）
   {
@@ -42,16 +42,16 @@ export default [
         setInterval: 'readonly',
         clearInterval: 'readonly',
         setTimeout: 'readonly',
-        clearTimeout: 'readonly'
+        clearTimeout: 'readonly',
       },
       parserOptions: {
         ecmaVersion: 2024,
         sourceType: 'module',
         ecmaFeatures: {
-          jsx: true
-        }
-      }
-    }
+          jsx: true,
+        },
+      },
+    },
   },
   // サーバー側（Node.js環境）
   {
@@ -69,15 +69,21 @@ export default [
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
         setImmediate: 'readonly',
-        clearImmediate: 'readonly'
+        clearImmediate: 'readonly',
       },
       parserOptions: {
         ecmaVersion: 2024,
-        sourceType: 'module'
-      }
-    }
+        sourceType: 'module',
+      },
+    },
   },
   {
-    ignores: ['node_modules/**', 'dist/**', 'build/**', '**/dist/**', '**/build/**']
-  }
+    ignores: [
+      'node_modules/**',
+      'dist/**',
+      'build/**',
+      '**/dist/**',
+      '**/build/**',
+    ],
+  },
 ];

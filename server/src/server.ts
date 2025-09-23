@@ -16,14 +16,14 @@ interface Vote {
   vote: number;
 }
 
-interface GameState {
+interface RoomState {
   players: Map<string, Player>;
   votes: Map<string, Vote>;
   gamePhase: 'waiting' | 'voting' | 'results';
   roomId: string;
 }
 
-interface GameStateUpdate {
+interface RoomStateUpdate {
   players: Player[];
   gamePhase: 'waiting' | 'voting' | 'results';
   votes: [string, Vote][] | null;
@@ -39,11 +39,10 @@ interface VoteCountUpdate {
   totalPlayers: number;
 }
 
-// Express アプリケーションの設定
 const app = express();
 const server = http.createServer(app);
 
-// CORS設定 - 本番環境とローカル開発の両方をサポート
+// CORS設定
 const allowedOrigins =
   process.env.NODE_ENV === 'production'
     ? process.env.CLIENT_URL
@@ -58,16 +57,13 @@ const io = new Server(server, {
   },
 });
 
-// 静的ファイルの配信 - 本番環境ではビルドされたクライアントファイルを配信
-app.use(express.static(path.join(__dirname, '../../client/dist')));
-
 // すべてのルートでindex.htmlを返す（React Routerのため）
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
 });
 
 // 状態管理
-const gameState: GameState = {
+const roomState: RoomState = {
   players: new Map<string, Player>(),
   votes: new Map<string, Vote>(),
   gamePhase: 'waiting',
@@ -75,17 +71,17 @@ const gameState: GameState = {
 };
 
 // ヘルパー関数：状態の更新を全プレイヤーに送信
-const broadcastGameState = (): void => {
-  const gameStateUpdate: GameStateUpdate = {
-    players: Array.from(gameState.players.values()),
-    gamePhase: gameState.gamePhase,
+const broadcastRoomState = (): void => {
+  const roomStateUpdate: RoomStateUpdate = {
+    players: Array.from(roomState.players.values()),
+    gamePhase: roomState.gamePhase,
     votes:
-      gameState.gamePhase === 'results'
-        ? Array.from(gameState.votes.entries())
+      roomState.gamePhase === 'results'
+        ? Array.from(roomState.votes.entries())
         : null,
   };
 
-  io.to(gameState.roomId).emit('game-state-update', gameStateUpdate);
+  io.to(roomState.roomId).emit('game-state-update', roomStateUpdate);
 };
 
 // WebSocket接続処理
@@ -105,21 +101,21 @@ io.on('connection', (socket) => {
       connected: true,
     };
 
-    gameState.players.set(socket.id, player);
-    socket.join(gameState.roomId);
+    roomState.players.set(socket.id, player);
+    socket.join(roomState.roomId);
 
-    broadcastGameState();
+    broadcastRoomState();
     console.log(`${playerName} が参加しました`);
   });
 
   // 投票開始
   socket.on('start-voting', () => {
-    if (gameState.players.size >= 2) {
-      gameState.gamePhase = 'voting';
-      gameState.votes.clear();
+    if (roomState.players.size >= 2) {
+      roomState.gamePhase = 'voting';
+      roomState.votes.clear();
 
-      io.to(gameState.roomId).emit('voting-started');
-      broadcastGameState();
+      io.to(roomState.roomId).emit('voting-started');
+      broadcastRoomState();
 
       console.log('投票が開始されました');
     } else {
@@ -137,8 +133,8 @@ io.on('connection', (socket) => {
       return;
     }
 
-    if (gameState.gamePhase === 'voting' && gameState.players.has(socket.id)) {
-      const player = gameState.players.get(socket.id);
+    if (roomState.gamePhase === 'voting' && roomState.players.has(socket.id)) {
+      const player = roomState.players.get(socket.id);
       if (!player) {
         console.error('プレイヤーが見つかりません:', socket.id);
         return;
@@ -150,28 +146,28 @@ io.on('connection', (socket) => {
         vote: vote,
       };
 
-      gameState.votes.set(socket.id, voteData);
+      roomState.votes.set(socket.id, voteData);
       console.log(`${player.name} が ${vote} に投票しました`);
 
       // 投票状況を更新
       const voteCountUpdate: VoteCountUpdate = {
-        votedCount: gameState.votes.size,
-        totalPlayers: gameState.players.size,
+        votedCount: roomState.votes.size,
+        totalPlayers: roomState.players.size,
       };
-      io.to(gameState.roomId).emit('vote-count-update', voteCountUpdate);
+      io.to(roomState.roomId).emit('vote-count-update', voteCountUpdate);
 
       // 全員の投票が完了したかチェック
-      if (gameState.votes.size === gameState.players.size) {
+      if (roomState.votes.size === roomState.players.size) {
         // カウントダウン開始を通知
-        io.to(gameState.roomId).emit('start-countdown');
+        io.to(roomState.roomId).emit('start-countdown');
         console.log('全員の投票が完了。カウントダウンを開始します');
 
         // 3秒後に結果を表示
         setTimeout(() => {
-          gameState.gamePhase = 'results';
+          roomState.gamePhase = 'results';
 
           // 結果計算
-          const votes = Array.from(gameState.votes.values());
+          const votes = Array.from(roomState.votes.values());
           const sum = votes.reduce((acc, v) => acc + v.vote, 0);
           const average = Math.round((sum / votes.length) * 10) / 10;
 
@@ -180,7 +176,7 @@ io.on('connection', (socket) => {
             average: average,
           };
 
-          io.to(gameState.roomId).emit('voting-complete', votingResult);
+          io.to(roomState.roomId).emit('voting-complete', votingResult);
           console.log(`投票完了。平均値: ${average}`);
         }, 3000);
       }
@@ -189,23 +185,23 @@ io.on('connection', (socket) => {
 
   // 次のラウンド開始
   socket.on('next-round', () => {
-    gameState.gamePhase = 'waiting';
-    gameState.votes.clear();
+    roomState.gamePhase = 'waiting';
+    roomState.votes.clear();
 
-    broadcastGameState();
+    broadcastRoomState();
     console.log('次のラウンドが開始されました');
   });
 
   // 切断処理
   socket.on('disconnect', () => {
-    if (gameState.players.has(socket.id)) {
-      const player = gameState.players.get(socket.id);
+    if (roomState.players.has(socket.id)) {
+      const player = roomState.players.get(socket.id);
       const playerName = player?.name || 'Unknown';
 
-      gameState.players.delete(socket.id);
-      gameState.votes.delete(socket.id);
+      roomState.players.delete(socket.id);
+      roomState.votes.delete(socket.id);
 
-      broadcastGameState();
+      broadcastRoomState();
       console.log(`${playerName} が退出しました`);
     }
   });
