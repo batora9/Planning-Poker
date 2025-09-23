@@ -27,21 +27,28 @@ function App() {
   const [gameState, setGameState] = useState<GameState>({
     players: [],
     gamePhase: 'waiting',
-    votes: null
+    votes: null,
   });
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
-  const [voteCount, setVoteCount] = useState({ votedCount: 0, totalPlayers: 0 });
-  const [results, setResults] = useState<{ votes: Vote[]; average: number } | null>(null);
+  const [voteCount, setVoteCount] = useState({
+    votedCount: 0,
+    totalPlayers: 0,
+  });
+  const [results, setResults] = useState<{
+    votes: Vote[];
+    average: number;
+  } | null>(null);
   const [isCountingDown, setIsCountingDown] = useState(false);
   const [countdown, setCountdown] = useState(0);
 
   const cardValues = [1, 2, 3, 5, 8, 13, 21, 34, 55, 89];
 
   useEffect(() => {
-    const socketUrl = process.env.NODE_ENV === 'production' 
-      ? process.env.SERVER_URL
-      : 'http://localhost:3000';
-    
+    const socketUrl =
+      process.env.NODE_ENV === 'production'
+        ? process.env.SERVER_URL
+        : 'http://localhost:3000';
+
     const newSocket = io(socketUrl);
     setSocket(newSocket);
 
@@ -56,20 +63,23 @@ function App() {
       setCountdown(0);
     });
 
-    newSocket.on('vote-count-update', (count: { votedCount: number; totalPlayers: number }) => {
-      setVoteCount(count);
-    });
+    newSocket.on(
+      'vote-count-update',
+      (count: { votedCount: number; totalPlayers: number }) => {
+        setVoteCount(count);
+      },
+    );
 
     newSocket.on('start-countdown', () => {
       setIsCountingDown(true);
       setCountdown(3);
-      
+
       // カウントダウンタイマー
       let count = 3;
       const timer = setInterval(() => {
         count--;
         setCountdown(count);
-        
+
         if (count <= 0) {
           clearInterval(timer);
           setIsCountingDown(false);
@@ -77,10 +87,13 @@ function App() {
       }, 1000);
     });
 
-    newSocket.on('voting-complete', (result: { votes: Vote[]; average: number }) => {
-      setResults(result);
-      setGameState(prev => ({ ...prev, gamePhase: 'results' }));
-    });
+    newSocket.on(
+      'voting-complete',
+      (result: { votes: Vote[]; average: number }) => {
+        setResults(result);
+        setGameState((prev) => ({ ...prev, gamePhase: 'results' }));
+      },
+    );
 
     return () => {
       newSocket.close();
@@ -151,7 +164,7 @@ function App() {
       <header className="header">
         <h1>Planning Poker</h1>
         <div className="players-info">
-          参加者: {gameState.players.map(p => p.name).join(', ')}
+          参加者: {gameState.players.map((p) => p.name).join(', ')}
         </div>
       </header>
 
@@ -162,7 +175,7 @@ function App() {
             <div className="players-list">
               <h3>参加者一覧 ({gameState.players.length}人)</h3>
               <ul>
-                {gameState.players.map(player => (
+                {gameState.players.map((player) => (
                   <li key={player.id} className="player-item">
                     {player.name}
                   </li>
@@ -189,7 +202,7 @@ function App() {
               {voteCount.votedCount} / {voteCount.totalPlayers} 人が投票済み
             </div>
             <div className="cards-container">
-              {cardValues.map(value => (
+              {cardValues.map((value) => (
                 <button
                   key={value}
                   className={`card ${selectedCard === value ? 'selected' : ''}`}
@@ -205,7 +218,7 @@ function App() {
                 選択したカード: {selectedCard}
               </div>
             )}
-            
+
             {/* カウントダウンオーバーレイ */}
             {isCountingDown && (
               <div className="countdown-overlay">
@@ -228,7 +241,7 @@ function App() {
             <div className="votes-details">
               <h3>投票詳細</h3>
               <div className="votes-grid">
-                {results.votes.map(vote => (
+                {results.votes.map((vote) => (
                   <div key={vote.playerId} className="vote-item">
                     <span className="player-name">{vote.playerName}</span>
                     <span className="vote-value">{vote.vote}</span>

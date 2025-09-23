@@ -277,13 +277,13 @@
   .cards-container {
     gap: 0.5rem;
   }
-  
+
   .card {
     width: 60px;
     height: 90px;
     font-size: 1.5rem;
   }
-  
+
   .votes-grid {
     grid-template-columns: 1fr;
   }
