@@ -2,6 +2,7 @@ import express from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 // 型定義
 interface Player {
@@ -55,6 +56,16 @@ const io = new Server(server, {
     origin: allowedOrigins.length > 0 ? allowedOrigins : true,
     methods: ['GET', 'POST'],
   },
+});
+
+// 静的ファイルの提供
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+app.use(express.static(path.join(__dirname, '../../client/dist')));
+
+// すべてのルートでindex.htmlを返す（React Routerのため）
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
 });
 
 // 状態管理
