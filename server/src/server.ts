@@ -57,11 +57,6 @@ const io = new Server(server, {
   },
 });
 
-// すべてのルートでindex.htmlを返す（React Routerのため）
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
-});
-
 // 状態管理
 const roomState: RoomState = {
   players: new Map<string, Player>(),
