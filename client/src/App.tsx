@@ -182,16 +182,9 @@ function App() {
                 ))}
               </ul>
             </div>
-            {gameState.players.length >= 2 && (
-              <button onClick={handleStartVoting} className="start-button">
-                投票を開始
-              </button>
-            )}
-            {gameState.players.length < 2 && (
-              <p className="waiting-message">
-                投票を開始するには最低2人の参加者が必要です
-              </p>
-            )}
+            <button onClick={handleStartVoting} className="start-button">
+              投票を開始
+            </button>
           </div>
         )}
 
