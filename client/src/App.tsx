@@ -100,6 +100,16 @@ function App() {
     };
   }, []);
 
+  // 投票画面に遷移した時にvoteCountを初期化
+  useEffect(() => {
+    if (gameState.gamePhase === 'voting') {
+      setVoteCount({
+        votedCount: 0,
+        totalPlayers: gameState.players.length,
+      });
+    }
+  }, [gameState.gamePhase, gameState.players.length]);
+
   const handleJoinGame = (e: React.FormEvent) => {
     e.preventDefault();
     if (playerName.trim() && socket) {
@@ -192,7 +202,7 @@ function App() {
           <div className="voting-screen">
             <h2>カードを選択してください</h2>
             <div className="vote-progress">
-              {voteCount.votedCount} / {voteCount.totalPlayers} 人が投票済み
+              {voteCount.votedCount} / {gameState.players.length} 人が投票済み
             </div>
             <div className="cards-container">
               {cardValues.map((value) => (
