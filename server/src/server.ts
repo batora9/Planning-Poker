@@ -116,17 +116,13 @@ io.on('connection', (socket) => {
 
   // 投票開始
   socket.on('start-voting', () => {
-    if (roomState.players.size >= 2) {
-      roomState.gamePhase = 'voting';
-      roomState.votes.clear();
+    roomState.gamePhase = 'voting';
+    roomState.votes.clear();
 
-      io.to(roomState.roomId).emit('voting-started');
-      broadcastRoomState();
+    io.to(roomState.roomId).emit('voting-started');
+    broadcastRoomState();
 
-      console.log('投票が開始されました');
-    } else {
-      console.log('投票開始失敗: 参加者が不足しています');
-    }
+    console.log('投票が開始されました');
   });
 
   // 投票処理
