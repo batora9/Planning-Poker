@@ -90,6 +90,16 @@ const broadcastRoomState = (): void => {
   io.to(roomState.roomId).emit('game-state-update', roomStateUpdate);
 };
 
+// ヘルパー関数：全員が切断した場合の処理
+const handleAllPlayersDisconnected = (): void => {
+  if (roomState.players.size === 0) {
+    roomState.gamePhase = 'waiting';
+    roomState.votes.clear();
+    console.log('全員が切断されました。waitingフェーズに戻します');
+    broadcastRoomState();
+  }
+};
+
 // WebSocket接続処理
 io.on('connection', (socket) => {
   console.log('新しいユーザーが接続しました:', socket.id);
@@ -181,12 +191,8 @@ io.on('connection', (socket) => {
           io.to(roomState.roomId).emit('voting-complete', votingResult);
           console.log(`投票完了。平均値: ${average}`);
 
-          // 全員が切断した場合、waitingに戻す
-          if (roomState.players.size === 0) {
-            roomState.gamePhase = 'waiting';
-            roomState.votes.clear();
-            console.log('全員が切断されました。waitingフェーズに戻します');
-          }
+          // 全員が切断した場合の処理
+          handleAllPlayersDisconnected();
         }, 3000);
       }
     }
@@ -210,8 +216,15 @@ io.on('connection', (socket) => {
       roomState.players.delete(socket.id);
       roomState.votes.delete(socket.id);
 
-      broadcastRoomState();
       console.log(`${playerName} が退出しました`);
+
+      // 全員が切断した場合の処理
+      handleAllPlayersDisconnected();
+
+      // 全員切断でない場合のみ状態をブロードキャスト
+      if (roomState.players.size > 0) {
+        broadcastRoomState();
+      }
     }
   });
 });
