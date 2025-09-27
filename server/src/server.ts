@@ -180,6 +180,13 @@ io.on('connection', (socket) => {
 
           io.to(roomState.roomId).emit('voting-complete', votingResult);
           console.log(`投票完了。平均値: ${average}`);
+
+          // 全員が切断した場合、waitingに戻す
+          if (roomState.players.size === 0) {
+            roomState.gamePhase = 'waiting';
+            roomState.votes.clear();
+            console.log('全員が切断されました。waitingフェーズに戻します');
+          }
         }, 3000);
       }
     }
